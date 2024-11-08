@@ -16,7 +16,7 @@ def process(input_image, prompt, low_threshold, high_threshold):
     input_image = input_image.resize((new_width, new_height))
     canny = canny_from_pil(input_image, low_threshold, high_threshold)
     with torch.no_grad():
-        c_t = transforms.ToTensor()(canny).unsqueeze(0).cuda()
+        c_t = transforms.ToTensor()(canny).unsqueeze(0).cpu()
         output_image = model(c_t, prompt)
         output_pil = transforms.ToPILImage()(output_image[0].cpu() * 0.5 + 0.5)
     # flippy canny values, map all 0s to 1s and 1s to 0s
