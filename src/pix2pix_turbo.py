@@ -185,7 +185,7 @@ class Pix2Pix_Turbo(torch.nn.Module):
 
     def forward(self, c_t, prompt=None, prompt_tokens=None, deterministic=True, r=1.0, noise_map=None):
         # either the prompt or the prompt_tokens should be provided
-        assert (prompt is None) != (prompt_tokens is None), "Either prompt or prompt_tokens should be provided"
+        # assert (prompt is None) != (prompt_tokens is None), "Either prompt or prompt_tokens should be provided"
 
         if prompt is not None:
             # encode the text prompt
@@ -193,7 +193,7 @@ class Pix2Pix_Turbo(torch.nn.Module):
                                             padding="max_length", truncation=True, return_tensors="pt").input_ids.cpu()
             caption_enc = self.text_encoder(caption_tokens)[0]
         else:
-            caption_enc = self.text_encoder(prompt_tokens)[0]
+            caption_enc = prompt_tokens
         if deterministic:
             encoded_control = self.vae.encode(c_t).latent_dist.sample() * self.vae.config.scaling_factor
             model_pred = self.unet(encoded_control, self.timesteps, encoder_hidden_states=caption_enc,).sample
@@ -203,8 +203,8 @@ class Pix2Pix_Turbo(torch.nn.Module):
             output_image = (self.vae.decode(x_denoised / self.vae.config.scaling_factor).sample).clamp(-1, 1)
         else:
             # scale the lora weights based on the r value
-            self.unet.set_adapters(["default"], weights=[r])
-            set_weights_and_activate_adapters(self.vae, ["vae_skip"], [r])
+            # self.unet.set_adapters(["default"], weights=[r])
+            # set_weights_and_activate_adapters(self.vae, ["vae_skip"], [r])
             encoded_control = self.vae.encode(c_t).latent_dist.sample() * self.vae.config.scaling_factor
             # combine the input and noise
             unet_input = encoded_control * r + noise_map * (1 - r)
